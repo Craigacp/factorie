@@ -19,10 +19,13 @@ class AhoCorasick(val sep : String) extends Serializable {
   private val logger = Logger.getLogger("cc.factorie.app.nlp.lexicon.AhoCorasick")
   
   val root : TrieNode = new TrieNode(sep)
-  var constructed : Boolean = false
+  private var constructed : Boolean = false
   
   /** Construct an instance from a Seq of phrases. */
   def this(sep : String, lexicon : Seq[Seq[String]]) = { this(sep); this ++= lexicon }
+
+  /** Accessor method for constructed. */
+  def isConstructed() : Boolean = { constructed }
   
   /**
    * Checks if the input phrase appears exactly in the lexicon.
@@ -160,7 +163,7 @@ class AhoCorasick(val sep : String) extends Serializable {
   }
   
   /** Adds a Seq of phrases into the current Trie, and fixes the failure transitions. */
-  def ++=(input : Seq[Seq[String]]) : Unit = {
+  def ++=(input : Seq[Seq[String]]) : Unit = synchronized {
     logger.log(Logger.INFO)("Appending to automaton")
     for (e <- input) { root.add(e,0) }
     setTransitions()
@@ -169,15 +172,17 @@ class AhoCorasick(val sep : String) extends Serializable {
   /**
    * Adds a single phrase to the Trie. The failure transitions will be recalculated on the next lookup.
    */
-  def +=(input : Seq[String]) : Unit = {
+  def +=(input : Seq[String]) : Unit = synchronized {
     root.add(input,0)
     constructed = false
   }
-  
+
   /** Calculate the failure transitions. */
-  def setTransitions() : Unit = {
-    TrieNode.setFailureTransitions(root)
-    constructed = true
+  def setTransitions() : Unit = synchronized {
+    if (!constructed) {
+      TrieNode.setFailureTransitions(root)
+      constructed = true
+    }
   }
   
   def size() : Int = { root.getNumPhrases() }
