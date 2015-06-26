@@ -42,7 +42,6 @@ class TrieNode(val label : String, var root : TrieNode, val sep : String, val de
   private var value : TrieNode = null // key value pair to save transitionMap overhead
   private var outputSet : Set[Int] = null
   private var output : Int = -1 // save outputSet overhead
-  private var output : Int = -1 // save outputSet overhead
   @transient var failNode : TrieNode = root
   private var phrases : Int = 0
   private var emit : Boolean = false
